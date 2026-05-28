@@ -410,6 +410,55 @@
     @media (max-width: 800px) {
       .board { grid-template-columns: 1fr; }
     }
+
+    /* ── Print meta bar (hidden on screen) ─────────────────────── */
+    .print-meta {
+      display: none;
+      padding: 8px 28px;
+      background: var(--cgi-white);
+      border-bottom: 1px solid var(--cgi-grey-light);
+      font-size: 0.82rem;
+      color: var(--cgi-grey-mid);
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* ── Print styles ────────────────────────────────────────────── */
+    @media print {
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+      body { background: white; }
+
+      .header-actions { display: none !important; }
+      .add-area       { display: none; }
+      .card .delete-btn,
+      .card .edit-btn  { display: none; }
+      .modal-backdrop  { display: none !important; }
+
+      .print-meta {
+        display: flex;
+      }
+
+      header {
+        padding: 8px 20px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .board {
+        padding: 12px 16px;
+        gap: 12px;
+      }
+
+      .column {
+        break-inside: avoid;
+        box-shadow: none;
+      }
+
+      .card {
+        break-inside: avoid;
+      }
+    }
   </style>
 </head>
 <body>
@@ -422,11 +471,17 @@
       <button class="btn-lang" id="btn-lang-fin" onclick="setLang('fi')">FIN</button>
       <button class="btn-lang" id="btn-lang-eng" onclick="setLang('en')">ENG</button>
     </div>
+    <button class="btn-header btn-export" id="btn-print" onclick="printReport()">⎙ Print</button>
     <button class="btn-header btn-export" id="btn-export" onclick="exportData()">↓ Export</button>
     <button class="btn-header btn-import" id="btn-import" onclick="document.getElementById('import-input').click()">↑ Import</button>
     <input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(event)" />
   </div>
 </header>
+
+<div class="print-meta">
+  <span id="print-title"></span>
+  <span id="print-date"></span>
+</div>
 
 <div class="board">
   <!-- Signals -->
@@ -540,6 +595,9 @@
       'btn-save':         'Tallenna',
       'btn-export':       '↓ Vie',
       'btn-import':       '↑ Tuo',
+      'btn-print':        '⎙ Tulosta',
+      'print-title':      'Leading Talent — Raportti',
+      'print-date-label': 'Tulostettu',
       'modal-edit-signals': 'Muokkaa signaalia',
       'modal-edit-options': 'Muokkaa vaihtoehtoa',
       'modal-edit-actions': 'Muokkaa toimenpidettä',
@@ -571,6 +629,9 @@
       'btn-save':         'Save',
       'btn-export':       '↓ Export',
       'btn-import':       '↑ Import',
+      'btn-print':        '⎙ Print',
+      'print-title':      'Leading Talent — Report',
+      'print-date-label': 'Printed',
       'modal-edit-signals': 'Edit Signal',
       'modal-edit-options': 'Edit Option',
       'modal-edit-actions': 'Edit Action',
@@ -602,8 +663,10 @@
     document.getElementById('add-btn-actions').textContent  = t('add-actions');
 
     // Header buttons
+    document.getElementById('btn-print').textContent  = t('btn-print');
     document.getElementById('btn-export').textContent = t('btn-export');
     document.getElementById('btn-import').textContent = t('btn-import');
+    document.getElementById('print-title').textContent = t('print-title');
 
     // Modal buttons
     document.getElementById('btn-cancel').textContent = t('btn-cancel');
@@ -879,6 +942,14 @@
   document.getElementById('modal-backdrop').addEventListener('click', e => {
     if (e.target === document.getElementById('modal-backdrop')) closeModal();
   });
+
+  // ── Print ─────────────────────────────────────────────────────────
+  function printReport() {
+    const locale = lang === 'fi' ? 'fi-FI' : 'en-GB';
+    const dateStr = new Date().toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' });
+    document.getElementById('print-date').textContent = t('print-date-label') + ': ' + dateStr;
+    window.print();
+  }
 
   // ── Import / Export ───────────────────────────────────────────────
   function exportData() {
