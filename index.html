@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fi">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -220,6 +220,23 @@
 
     .card .delete-btn:hover { color: var(--cgi-red); }
 
+    .card .edit-btn {
+      position: absolute;
+      top: 6px;
+      right: 30px;
+      background: none;
+      border: none;
+      color: var(--cgi-grey-light);
+      font-size: 0.85rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 2px;
+      border-radius: 3px;
+      transition: color 0.15s;
+    }
+
+    .card .edit-btn:hover { color: var(--cgi-grey-dark); }
+
     .add-area {
       padding: 8px 12px 14px;
     }
@@ -341,6 +358,41 @@
 
     .btn-save:hover { background: var(--cgi-red-dark); }
 
+    .lang-toggle {
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--cgi-grey-mid);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .btn-lang {
+      padding: 5px 12px;
+      background: none;
+      border: none;
+      color: var(--cgi-grey-light);
+      font-size: 0.78rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: 0.06em;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-lang:not(:last-child) {
+      border-right: 1px solid var(--cgi-grey-mid);
+    }
+
+    .btn-lang.active {
+      background: var(--cgi-grey-dark);
+      color: var(--cgi-white);
+    }
+
+    .btn-lang:not(.active):hover {
+      background: rgba(255,255,255,0.08);
+      color: var(--cgi-white);
+    }
+
     .category-heading {
       font-size: 0.9rem;
       font-weight: 700;
@@ -366,8 +418,12 @@
   <img src="image.png" alt="CGI Logo" />
   <h1>Leading Talent</h1>
   <div class="header-actions">
-    <button class="btn-header btn-export" onclick="exportData()">↓ Export</button>
-    <button class="btn-header btn-import" onclick="document.getElementById('import-input').click()">↑ Import</button>
+    <div class="lang-toggle">
+      <button class="btn-lang" id="btn-lang-fin" onclick="setLang('fi')">FIN</button>
+      <button class="btn-lang" id="btn-lang-eng" onclick="setLang('en')">ENG</button>
+    </div>
+    <button class="btn-header btn-export" id="btn-export" onclick="exportData()">↓ Export</button>
+    <button class="btn-header btn-import" id="btn-import" onclick="document.getElementById('import-input').click()">↑ Import</button>
     <input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(event)" />
   </div>
 </header>
@@ -376,36 +432,36 @@
   <!-- Signals -->
   <div class="column" data-col="signals">
     <div class="col-header">
-      <h2>Signals</h2>
+      <h2 data-i18n="col-signals"></h2>
     </div>
-    <p class="col-desc">Things people say that may be distorted</p>
+    <p class="col-desc" data-i18n="col-signals-desc"></p>
     <div class="card-list" id="list-signals"></div>
     <div class="add-area">
-      <button class="add-btn" onclick="openModal('signals')">+ Add Signal</button>
+      <button class="add-btn" id="add-btn-signals" onclick="openModal('signals')"></button>
     </div>
   </div>
 
   <!-- Options -->
   <div class="column" data-col="options">
     <div class="col-header">
-      <h2>Options</h2>
+      <h2 data-i18n="col-options"></h2>
     </div>
-    <p class="col-desc">Proposals of what we could do</p>
+    <p class="col-desc" data-i18n="col-options-desc"></p>
     <div class="card-list" id="list-options"></div>
     <div class="add-area">
-      <button class="add-btn" onclick="openModal('options')">+ Add Option</button>
+      <button class="add-btn" id="add-btn-options" onclick="openModal('options')"></button>
     </div>
   </div>
 
   <!-- Actions -->
   <div class="column" data-col="actions">
     <div class="col-header">
-      <h2>Actions</h2>
+      <h2 data-i18n="col-actions"></h2>
     </div>
-    <p class="col-desc">Selected actions to do</p>
+    <p class="col-desc" data-i18n="col-actions-desc"></p>
     <div class="card-list" id="list-actions"></div>
     <div class="add-area">
-      <button class="add-btn" onclick="openModal('actions')">+ Add Action</button>
+      <button class="add-btn" id="add-btn-actions" onclick="openModal('actions')"></button>
     </div>
   </div>
 </div>
@@ -417,29 +473,29 @@
 
     <!-- Signal / Option fields -->
     <div id="fields-simple">
-      <label for="input-text">Text</label>
-      <input type="text" id="input-text" placeholder="Enter text..." maxlength="200" />
+      <label for="input-text" data-i18n="lbl-text"></label>
+      <input type="text" id="input-text" maxlength="200" />
     </div>
 
     <!-- Signal category -->
     <div id="fields-signal-category" style="display:none">
-      <label for="input-category">Category</label>
-      <input type="text" id="input-category" placeholder="e.g. Compensation, Culture..." maxlength="80" />
+      <label for="input-category" data-i18n="lbl-category"></label>
+      <input type="text" id="input-category" maxlength="80" />
     </div>
 
     <!-- Action fields -->
     <div id="fields-action" style="display:none">
-      <label for="input-name">Name</label>
-      <input type="text" id="input-name" placeholder="Action name..." maxlength="100" />
-      <label for="input-desc">Description</label>
-      <textarea id="input-desc" rows="3" placeholder="Describe the action..."></textarea>
-      <label for="input-timeframe">Timeframe</label>
-      <input type="text" id="input-timeframe" placeholder="e.g. Q3 2026, 2 weeks, by June..." maxlength="60" />
+      <label for="input-name" data-i18n="lbl-name"></label>
+      <input type="text" id="input-name" maxlength="100" />
+      <label for="input-desc" data-i18n="lbl-desc"></label>
+      <textarea id="input-desc" rows="3"></textarea>
+      <label for="input-timeframe" data-i18n="lbl-timeframe"></label>
+      <input type="text" id="input-timeframe" maxlength="60" />
     </div>
 
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-      <button class="btn-save" onclick="saveCard()">Save</button>
+      <button class="btn-cancel" id="btn-cancel" onclick="closeModal()"></button>
+      <button class="btn-save" id="btn-save" onclick="saveCard()"></button>
     </div>
   </div>
 </div>
@@ -451,6 +507,120 @@
   let editId = null;
   let dragSrcId = null;
   let dragSrcCol = null;
+
+  // ── i18n ──────────────────────────────────────────────────────────
+  const LANG_STORAGE_KEY = 'leading-talent-lang';
+  let lang = localStorage.getItem(LANG_STORAGE_KEY) || 'fi';
+
+  const STRINGS = {
+    fi: {
+      'col-signals':      'Signaalit',
+      'col-signals-desc': 'Asioita, joita ihmiset sanovat ja jotka saattavat olla vääristyneitä',
+      'col-options':      'Vaihtoehdot',
+      'col-options-desc': 'Ehdotuksia siitä, mitä voisimme tehdä',
+      'col-actions':      'Toimenpiteet',
+      'col-actions-desc': 'Valitut toimenpiteet',
+      'add-signals':      '+ Lisää signaali',
+      'add-options':      '+ Lisää vaihtoehto',
+      'add-actions':      '+ Lisää toimenpide',
+      'modal-signals':    'Lisää signaali',
+      'modal-options':    'Lisää vaihtoehto',
+      'modal-actions':    'Lisää toimenpide',
+      'lbl-text':         'Teksti',
+      'lbl-category':     'Kategoria',
+      'lbl-name':         'Nimi',
+      'lbl-desc':         'Kuvaus',
+      'lbl-timeframe':    'Aikataulu',
+      'ph-text':          'Kirjoita teksti…',
+      'ph-category':      'esim. Palkka, Kulttuuri…',
+      'ph-name':          'Toimenpiteen nimi…',
+      'ph-desc':          'Kuvaile toimenpidettä…',
+      'ph-timeframe':     'esim. Q3 2026, 2 viikkoa, kesäkuuhun mennessä…',
+      'btn-cancel':       'Peruuta',
+      'btn-save':         'Tallenna',
+      'btn-export':       '↓ Vie',
+      'btn-import':       '↑ Tuo',
+      'modal-edit-signals': 'Muokkaa signaalia',
+      'modal-edit-options': 'Muokkaa vaihtoehtoa',
+      'modal-edit-actions': 'Muokkaa toimenpidettä',
+    },
+    en: {
+      'col-signals':      'Signals',
+      'col-signals-desc': 'Things people say that may be distorted',
+      'col-options':      'Options',
+      'col-options-desc': 'Proposals of what we could do',
+      'col-actions':      'Actions',
+      'col-actions-desc': 'Selected actions to do',
+      'add-signals':      '+ Add Signal',
+      'add-options':      '+ Add Option',
+      'add-actions':      '+ Add Action',
+      'modal-signals':    'Add Signal',
+      'modal-options':    'Add Option',
+      'modal-actions':    'Add Action',
+      'lbl-text':         'Text',
+      'lbl-category':     'Category',
+      'lbl-name':         'Name',
+      'lbl-desc':         'Description',
+      'lbl-timeframe':    'Timeframe',
+      'ph-text':          'Enter text…',
+      'ph-category':      'e.g. Compensation, Culture…',
+      'ph-name':          'Action name…',
+      'ph-desc':          'Describe the action…',
+      'ph-timeframe':     'e.g. Q3 2026, 2 weeks, by June…',
+      'btn-cancel':       'Cancel',
+      'btn-save':         'Save',
+      'btn-export':       '↓ Export',
+      'btn-import':       '↑ Import',
+      'modal-edit-signals': 'Edit Signal',
+      'modal-edit-options': 'Edit Option',
+      'modal-edit-actions': 'Edit Action',
+    }
+  };
+
+  function t(key) { return STRINGS[lang][key] || STRINGS['en'][key] || key; }
+
+  function setLang(l) {
+    lang = l;
+    localStorage.setItem(LANG_STORAGE_KEY, lang);
+    document.documentElement.lang = lang;
+    applyLang();
+  }
+
+  function applyLang() {
+    // Toggle button states
+    document.getElementById('btn-lang-fin').classList.toggle('active', lang === 'fi');
+    document.getElementById('btn-lang-eng').classList.toggle('active', lang === 'en');
+
+    // data-i18n elements
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      el.textContent = t(el.dataset.i18n);
+    });
+
+    // Add buttons
+    document.getElementById('add-btn-signals').textContent = t('add-signals');
+    document.getElementById('add-btn-options').textContent  = t('add-options');
+    document.getElementById('add-btn-actions').textContent  = t('add-actions');
+
+    // Header buttons
+    document.getElementById('btn-export').textContent = t('btn-export');
+    document.getElementById('btn-import').textContent = t('btn-import');
+
+    // Modal buttons
+    document.getElementById('btn-cancel').textContent = t('btn-cancel');
+    document.getElementById('btn-save').textContent   = t('btn-save');
+
+    // Placeholders
+    document.getElementById('input-text').placeholder      = t('ph-text');
+    document.getElementById('input-category').placeholder  = t('ph-category');
+    document.getElementById('input-name').placeholder      = t('ph-name');
+    document.getElementById('input-desc').placeholder      = t('ph-desc');
+    document.getElementById('input-timeframe').placeholder = t('ph-timeframe');
+
+    // Refresh modal title if open
+    if (modalCol) {
+      document.getElementById('modal-title').textContent = t('modal-' + modalCol);
+    }
+  }
 
   // ── Persistence ──────────────────────────────────────────────────
   function load() {
@@ -507,6 +677,7 @@
 
     if (col === 'actions') {
       el.innerHTML = `
+        <button class="edit-btn" title="Edit" onclick="openEditModal('${col}','${card.id}')">✎</button>
         <button class="delete-btn" title="Delete" onclick="deleteCard('${col}','${card.id}')">✕</button>
         <div class="card-name">${esc(card.name)}</div>
         <div class="card-desc">${esc(card.desc)}</div>
@@ -514,6 +685,7 @@
       `;
     } else {
       el.innerHTML = `
+        <button class="edit-btn" title="Edit" onclick="openEditModal('${col}','${card.id}')">✎</button>
         <button class="delete-btn" title="Delete" onclick="deleteCard('${col}','${card.id}')">✕</button>
         <div class="card-text">${esc(card.text)}</div>
       `;
@@ -615,7 +787,7 @@
   function openModal(col) {
     modalCol = col;
     editId = null;
-    document.getElementById('modal-title').textContent = 'Add ' + col.slice(0,1).toUpperCase() + col.slice(1,-1);
+    document.getElementById('modal-title').textContent = t('modal-' + col);
     document.getElementById('fields-simple').style.display = col !== 'actions' ? '' : 'none';
     document.getElementById('fields-action').style.display = col === 'actions' ? '' : 'none';
     document.getElementById('fields-signal-category').style.display = col === 'signals' ? '' : 'none';
@@ -624,6 +796,29 @@
     document.getElementById('input-desc').value = '';
     document.getElementById('input-timeframe').value = '';
     document.getElementById('input-category').value = '';
+    document.getElementById('modal-backdrop').classList.add('open');
+    setTimeout(() => {
+      (col === 'actions' ? document.getElementById('input-name') : document.getElementById('input-text')).focus();
+    }, 50);
+  }
+
+  function openEditModal(col, id) {
+    const card = state[col].find(c => c.id === id);
+    if (!card) return;
+    modalCol = col;
+    editId = id;
+    document.getElementById('modal-title').textContent = t('modal-edit-' + col);
+    document.getElementById('fields-simple').style.display = col !== 'actions' ? '' : 'none';
+    document.getElementById('fields-action').style.display = col === 'actions' ? '' : 'none';
+    document.getElementById('fields-signal-category').style.display = col === 'signals' ? '' : 'none';
+    if (col === 'actions') {
+      document.getElementById('input-name').value = card.name || '';
+      document.getElementById('input-desc').value = card.desc || '';
+      document.getElementById('input-timeframe').value = card.timeframe || '';
+    } else {
+      document.getElementById('input-text').value = card.text || '';
+      document.getElementById('input-category').value = card.category || '';
+    }
     document.getElementById('modal-backdrop').classList.add('open');
     setTimeout(() => {
       (col === 'actions' ? document.getElementById('input-name') : document.getElementById('input-text')).focus();
@@ -642,16 +837,32 @@
       const desc = document.getElementById('input-desc').value.trim();
       const timeframe = document.getElementById('input-timeframe').value.trim();
       if (!name) { document.getElementById('input-name').focus(); return; }
-      state.actions.push({ id: uid(), name, desc, timeframe });
+      if (editId) {
+        const card = state.actions.find(c => c.id === editId);
+        if (card) { card.name = name; card.desc = desc; card.timeframe = timeframe; }
+      } else {
+        state.actions.push({ id: uid(), name, desc, timeframe });
+      }
     } else {
       const text = document.getElementById('input-text').value.trim();
       if (!text) { document.getElementById('input-text').focus(); return; }
-      const card = { id: uid(), text };
-      if (modalCol === 'signals') {
-        const category = document.getElementById('input-category').value.trim();
-        if (category) card.category = category;
+      if (editId) {
+        const card = state[modalCol].find(c => c.id === editId);
+        if (card) {
+          card.text = text;
+          if (modalCol === 'signals') {
+            const category = document.getElementById('input-category').value.trim();
+            if (category) card.category = category; else delete card.category;
+          }
+        }
+      } else {
+        const card = { id: uid(), text };
+        if (modalCol === 'signals') {
+          const category = document.getElementById('input-category').value.trim();
+          if (category) card.category = category;
+        }
+        state[modalCol].push(card);
       }
-      state[modalCol].push(card);
     }
     save();
     render();
@@ -705,6 +916,7 @@
 
   // ── Init ──────────────────────────────────────────────────────────
   load();
+  applyLang();
   render();
 </script>
 </body>
