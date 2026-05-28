@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Leading Talent</title>
+  <style>
+    :root {
+      --cgi-red: #E2001A;
+      --cgi-red-dark: #b5001a;
+      --cgi-black: #1a1a1a;
+      --cgi-grey-dark: #3a3a3a;
+      --cgi-grey-mid: #6b6b6b;
+      --cgi-grey-light: #d0d0d0;
+      --cgi-grey-bg: #f2f2f2;
+      --cgi-white: #ffffff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--cgi-grey-bg);
+      color: var(--cgi-black);
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--cgi-black);
+      padding: 12px 28px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      border-bottom: 4px solid var(--cgi-red);
+    }
+
+    header img {
+      height: 40px;
+    }
+
+    header h1 {
+      color: var(--cgi-white);
+      font-size: 1.3rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      padding: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .column {
+      background: var(--cgi-white);
+      border-radius: 8px;
+      border-top: 5px solid var(--cgi-grey-mid);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .column[data-col="signals"] { border-top-color: var(--cgi-grey-mid); }
+    .column[data-col="options"]  { border-top-color: var(--cgi-grey-dark); }
+    .column[data-col="actions"]  { border-top-color: var(--cgi-red); }
+
+    .col-header {
+      padding: 14px 16px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--cgi-grey-light);
+    }
+
+    .col-header h2 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .column[data-col="signals"] .col-header h2 { color: var(--cgi-grey-mid); }
+    .column[data-col="options"]  .col-header h2 { color: var(--cgi-grey-dark); }
+    .column[data-col="actions"]  .col-header h2 { color: var(--cgi-red); }
+
+    .col-desc {
+      font-size: 0.75rem;
+      color: var(--cgi-grey-mid);
+      padding: 6px 16px 10px;
+      font-style: italic;
+    }
+
+    .card-list {
+      flex: 1;
+      min-height: 80px;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card-list.drag-over {
+      background: #ffeaea;
+      border-radius: 4px;
+    }
+
+    .card {
+      background: var(--cgi-grey-bg);
+      border: 1px solid var(--cgi-grey-light);
+      border-left: 4px solid var(--cgi-grey-light);
+      border-radius: 6px;
+      padding: 10px 12px;
+      cursor: grab;
+      position: relative;
+      transition: box-shadow 0.15s, transform 0.1s;
+      user-select: none;
+    }
+
+    .card:active { cursor: grabbing; }
+
+    .card.dragging {
+      opacity: 0.4;
+      transform: scale(0.97);
+    }
+
+    .column[data-col="signals"] .card { border-left-color: var(--cgi-grey-mid); }
+    .column[data-col="options"]  .card { border-left-color: var(--cgi-grey-dark); }
+    .column[data-col="actions"]  .card { border-left-color: var(--cgi-red); }
+
+    .card:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.13); }
+
+    .card .card-text {
+      font-size: 0.9rem;
+      color: var(--cgi-black);
+      line-height: 1.4;
+    }
+
+    .card .card-name {
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 3px;
+    }
+
+    .card .card-desc {
+      font-size: 0.82rem;
+      color: var(--cgi-grey-dark);
+      margin-bottom: 4px;
+      line-height: 1.4;
+    }
+
+    .card .card-timeframe {
+      display: inline-block;
+      font-size: 0.72rem;
+      background: var(--cgi-red);
+      color: var(--cgi-white);
+      border-radius: 3px;
+      padding: 1px 7px;
+      margin-top: 2px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    .card .delete-btn {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      background: none;
+      border: none;
+      color: var(--cgi-grey-light);
+      font-size: 1rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 2px;
+      border-radius: 3px;
+      transition: color 0.15s;
+    }
+
+    .card .delete-btn:hover { color: var(--cgi-red); }
+
+    .add-area {
+      padding: 8px 12px 14px;
+    }
+
+    .add-btn {
+      width: 100%;
+      padding: 8px;
+      border: 2px dashed var(--cgi-grey-light);
+      border-radius: 6px;
+      background: none;
+      color: var(--cgi-grey-mid);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      font-weight: 500;
+    }
+
+    .add-btn:hover {
+      border-color: var(--cgi-red);
+      color: var(--cgi-red);
+      background: #fff0f1;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      background: var(--cgi-white);
+      border-radius: 10px;
+      padding: 28px 28px 22px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+      border-top: 5px solid var(--cgi-red);
+    }
+
+    .modal h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--cgi-black);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .modal label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--cgi-grey-dark);
+      margin-bottom: 4px;
+      margin-top: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .modal input,
+    .modal textarea,
+    .modal select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--cgi-grey-light);
+      border-radius: 5px;
+      font-size: 0.9rem;
+      color: var(--cgi-black);
+      background: var(--cgi-grey-bg);
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    .modal input:focus,
+    .modal textarea:focus,
+    .modal select:focus {
+      outline: 2px solid var(--cgi-red);
+      border-color: var(--cgi-red);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: flex-end;
+    }
+
+    .btn-cancel {
+      padding: 8px 18px;
+      border: 1px solid var(--cgi-grey-light);
+      border-radius: 5px;
+      background: none;
+      color: var(--cgi-grey-dark);
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-family: inherit;
+    }
+
+    .btn-cancel:hover { background: var(--cgi-grey-bg); }
+
+    .btn-save {
+      padding: 8px 22px;
+      border: none;
+      border-radius: 5px;
+      background: var(--cgi-red);
+      color: var(--cgi-white);
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      font-family: inherit;
+    }
+
+    .btn-save:hover { background: var(--cgi-red-dark); }
+
+    @media (max-width: 800px) {
+      .board { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="image.png" alt="CGI Logo" />
+  <h1>Leading Talent</h1>
+</header>
+
+<div class="board">
+  <!-- Signals -->
+  <div class="column" data-col="signals">
+    <div class="col-header">
+      <h2>Signals</h2>
+    </div>
+    <p class="col-desc">Things people say that may be distorted</p>
+    <div class="card-list" id="list-signals"></div>
+    <div class="add-area">
+      <button class="add-btn" onclick="openModal('signals')">+ Add Signal</button>
+    </div>
+  </div>
+
+  <!-- Options -->
+  <div class="column" data-col="options">
+    <div class="col-header">
+      <h2>Options</h2>
+    </div>
+    <p class="col-desc">Proposals of what we could do</p>
+    <div class="card-list" id="list-options"></div>
+    <div class="add-area">
+      <button class="add-btn" onclick="openModal('options')">+ Add Option</button>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="column" data-col="actions">
+    <div class="col-header">
+      <h2>Actions</h2>
+    </div>
+    <p class="col-desc">Selected actions to do</p>
+    <div class="card-list" id="list-actions"></div>
+    <div class="add-area">
+      <button class="add-btn" onclick="openModal('actions')">+ Add Action</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal">
+    <h3 id="modal-title">Add Card</h3>
+
+    <!-- Signal / Option fields -->
+    <div id="fields-simple">
+      <label for="input-text">Text</label>
+      <input type="text" id="input-text" placeholder="Enter text..." maxlength="200" />
+    </div>
+
+    <!-- Action fields -->
+    <div id="fields-action" style="display:none">
+      <label for="input-name">Name</label>
+      <input type="text" id="input-name" placeholder="Action name..." maxlength="100" />
+      <label for="input-desc">Description</label>
+      <textarea id="input-desc" rows="3" placeholder="Describe the action..."></textarea>
+      <label for="input-timeframe">Timeframe</label>
+      <input type="text" id="input-timeframe" placeholder="e.g. Q3 2026, 2 weeks, by June..." maxlength="60" />
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveCard()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'leading-talent-cards';
+  let state = { signals: [], options: [], actions: [] };
+  let modalCol = null;
+  let editId = null;
+  let dragSrcId = null;
+  let dragSrcCol = null;
+
+  // ── Persistence ──────────────────────────────────────────────────
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) state = JSON.parse(raw);
+    } catch(e) {}
+    ['signals','options','actions'].forEach(c => { if (!Array.isArray(state[c])) state[c] = []; });
+  }
+
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  // ── Rendering ────────────────────────────────────────────────────
+  function render() {
+    ['signals','options','actions'].forEach(col => {
+      const list = document.getElementById('list-' + col);
+      list.innerHTML = '';
+      state[col].forEach(card => {
+        list.appendChild(buildCard(card, col));
+      });
+      setupDropZone(list, col);
+    });
+  }
+
+  function buildCard(card, col) {
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.draggable = true;
+    el.dataset.id = card.id;
+    el.dataset.col = col;
+
+    if (col === 'actions') {
+      el.innerHTML = `
+        <button class="delete-btn" title="Delete" onclick="deleteCard('${col}','${card.id}')">✕</button>
+        <div class="card-name">${esc(card.name)}</div>
+        <div class="card-desc">${esc(card.desc)}</div>
+        ${card.timeframe ? `<span class="card-timeframe">${esc(card.timeframe)}</span>` : ''}
+      `;
+    } else {
+      el.innerHTML = `
+        <button class="delete-btn" title="Delete" onclick="deleteCard('${col}','${card.id}')">✕</button>
+        <div class="card-text">${esc(card.text)}</div>
+      `;
+    }
+
+    el.addEventListener('dragstart', onDragStart);
+    el.addEventListener('dragend', onDragEnd);
+    return el;
+  }
+
+  function esc(str) {
+    if (!str) return '';
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Drag & Drop ──────────────────────────────────────────────────
+  function onDragStart(e) {
+    dragSrcId = e.currentTarget.dataset.id;
+    dragSrcCol = e.currentTarget.dataset.col;
+    e.currentTarget.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  }
+
+  function onDragEnd(e) {
+    e.currentTarget.classList.remove('dragging');
+    document.querySelectorAll('.card-list').forEach(l => l.classList.remove('drag-over'));
+  }
+
+  function setupDropZone(list, col) {
+    list.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      list.classList.add('drag-over');
+    });
+    list.addEventListener('dragleave', () => list.classList.remove('drag-over'));
+    list.addEventListener('drop', e => {
+      e.preventDefault();
+      list.classList.remove('drag-over');
+      if (!dragSrcId) return;
+      moveCard(dragSrcCol, col, dragSrcId, e);
+    });
+  }
+
+  function moveCard(fromCol, toCol, cardId, dropEvent) {
+    const srcArr = state[fromCol];
+    const idx = srcArr.findIndex(c => c.id === cardId);
+    if (idx === -1) return;
+    const card = srcArr[idx];
+
+    // If moving to a different type column, adapt fields
+    if (fromCol !== toCol) {
+      if (toCol === 'actions' && !card.name) {
+        // promote to action
+        card.name = card.text || 'Unnamed action';
+        card.desc = '';
+        card.timeframe = '';
+        delete card.text;
+      } else if (toCol !== 'actions' && card.name !== undefined) {
+        // demote to oneliner
+        card.text = card.name + (card.desc ? ': ' + card.desc : '');
+        delete card.name;
+        delete card.desc;
+        delete card.timeframe;
+      }
+    }
+
+    srcArr.splice(idx, 1);
+
+    // Insert at position based on drop target
+    const destArr = state[toCol];
+    const list = document.getElementById('list-' + toCol);
+    const cards = [...list.querySelectorAll('.card')];
+    let insertIdx = destArr.length;
+    for (let i = 0; i < cards.length; i++) {
+      const rect = cards[i].getBoundingClientRect();
+      if (dropEvent.clientY < rect.top + rect.height / 2) {
+        insertIdx = i;
+        break;
+      }
+    }
+    destArr.splice(insertIdx, 0, card);
+
+    save();
+    render();
+  }
+
+  // ── CRUD ─────────────────────────────────────────────────────────
+  function deleteCard(col, id) {
+    state[col] = state[col].filter(c => c.id !== id);
+    save();
+    render();
+  }
+
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  // ── Modal ─────────────────────────────────────────────────────────
+  function openModal(col) {
+    modalCol = col;
+    editId = null;
+    document.getElementById('modal-title').textContent = 'Add ' + col.slice(0,1).toUpperCase() + col.slice(1,-1);
+    document.getElementById('fields-simple').style.display = col !== 'actions' ? '' : 'none';
+    document.getElementById('fields-action').style.display = col === 'actions' ? '' : 'none';
+    document.getElementById('input-text').value = '';
+    document.getElementById('input-name').value = '';
+    document.getElementById('input-desc').value = '';
+    document.getElementById('input-timeframe').value = '';
+    document.getElementById('modal-backdrop').classList.add('open');
+    setTimeout(() => {
+      (col === 'actions' ? document.getElementById('input-name') : document.getElementById('input-text')).focus();
+    }, 50);
+  }
+
+  function closeModal() {
+    document.getElementById('modal-backdrop').classList.remove('open');
+    modalCol = null;
+    editId = null;
+  }
+
+  function saveCard() {
+    if (modalCol === 'actions') {
+      const name = document.getElementById('input-name').value.trim();
+      const desc = document.getElementById('input-desc').value.trim();
+      const timeframe = document.getElementById('input-timeframe').value.trim();
+      if (!name) { document.getElementById('input-name').focus(); return; }
+      state.actions.push({ id: uid(), name, desc, timeframe });
+    } else {
+      const text = document.getElementById('input-text').value.trim();
+      if (!text) { document.getElementById('input-text').focus(); return; }
+      state[modalCol].push({ id: uid(), text });
+    }
+    save();
+    render();
+    closeModal();
+  }
+
+  // Enter to submit
+  document.getElementById('modal-backdrop').addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+    if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') saveCard();
+  });
+
+  // Click outside to close
+  document.getElementById('modal-backdrop').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-backdrop')) closeModal();
+  });
+
+  // ── Init ──────────────────────────────────────────────────────────
+  load();
+  render();
+</script>
+</body>
+</html>
