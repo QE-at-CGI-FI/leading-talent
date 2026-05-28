@@ -44,6 +44,45 @@
       font-size: 1.3rem;
       font-weight: 600;
       letter-spacing: 0.04em;
+      flex: 1;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-header {
+      padding: 7px 16px;
+      border-radius: 5px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-export {
+      background: none;
+      border: 1px solid var(--cgi-grey-mid);
+      color: var(--cgi-grey-light);
+    }
+
+    .btn-export:hover {
+      background: var(--cgi-grey-dark);
+      color: var(--cgi-white);
+    }
+
+    .btn-import {
+      background: var(--cgi-red);
+      border: 1px solid var(--cgi-red);
+      color: var(--cgi-white);
+    }
+
+    .btn-import:hover {
+      background: var(--cgi-red-dark);
+      border-color: var(--cgi-red-dark);
     }
 
     .board {
@@ -312,6 +351,11 @@
 <header>
   <img src="image.png" alt="CGI Logo" />
   <h1>Leading Talent</h1>
+  <div class="header-actions">
+    <button class="btn-header btn-export" onclick="exportData()">↓ Export</button>
+    <button class="btn-header btn-import" onclick="document.getElementById('import-input').click()">↑ Import</button>
+    <input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(event)" />
+  </div>
 </header>
 
 <div class="board">
@@ -576,6 +620,40 @@
   document.getElementById('modal-backdrop').addEventListener('click', e => {
     if (e.target === document.getElementById('modal-backdrop')) closeModal();
   });
+
+  // ── Import / Export ───────────────────────────────────────────────
+  function exportData() {
+    const json = JSON.stringify(state, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'leading-talent-' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function importData(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const parsed = JSON.parse(ev.target.result);
+        if (parsed && typeof parsed === 'object') {
+          state.signals = Array.isArray(parsed.signals) ? parsed.signals : [];
+          state.options  = Array.isArray(parsed.options)  ? parsed.options  : [];
+          state.actions  = Array.isArray(parsed.actions)  ? parsed.actions  : [];
+          save();
+          render();
+        }
+      } catch(err) {
+        alert('Invalid JSON file.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  }
 
   // ── Init ──────────────────────────────────────────────────────────
   load();
