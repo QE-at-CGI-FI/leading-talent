@@ -446,13 +446,16 @@
       }
 
       .board {
+        display: block;
         padding: 12px 16px;
-        gap: 12px;
       }
 
       .column {
-        break-inside: avoid;
+        display: block;
+        width: 100%;
+        margin-bottom: 24px;
         box-shadow: none;
+        break-before: auto;
       }
 
       .card {
